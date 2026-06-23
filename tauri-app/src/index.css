@@ -1,0 +1,190 @@
+@import 'tailwindcss';
+
+/* ── Apple Liquid Glass Design Tokens ──────────────────────── */
+@theme {
+  /* Light mode */
+  --color-bg: #f0f0f3;
+  --color-surface: #ffffff;
+  --color-glass-bg: rgba(255, 255, 255, 0.58);
+  --color-glass-border: rgba(0, 0, 0, 0.05);
+  --color-glass-shadow: rgba(0, 0, 0, 0.04);
+  --color-text: #1d1d1f;
+  --color-text-secondary: #86868b;
+  --color-accent: #007aff;
+  --color-accent-hover: #0062cc;
+  --color-danger: #ff3b30;
+  --color-danger-hover: #cc1c1c;
+  --color-border: rgba(0, 0, 0, 0.07);
+  --color-success: #34c759;
+  --radius-card: 22px;
+  --radius-btn: 10px;
+  --radius-sm: 8px;
+  --radius-xs: 6px;
+  --shadow-glass:
+    0 1px 3px rgba(0, 0, 0, 0.03),
+    0 4px 16px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.75),
+    inset 0 -0.5px 0 rgba(0, 0, 0, 0.03);
+  --shadow-card-hover:
+    0 2px 6px rgba(0, 0, 0, 0.04),
+    0 8px 24px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    inset 0 -0.5px 0 rgba(0, 0, 0, 0.04);
+  --shadow-modal:
+    0 0 0 1px rgba(0, 0, 0, 0.04),
+    0 8px 40px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'SF Mono', 'Fira Code', monospace;
+  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ── Dark mode — deep charcoal, cooler glass ───────────────── */
+@custom-variant dark (&:where(.dark, .dark *));
+
+.dark {
+  --color-bg: #08080a;
+  --color-surface: #1c1c1e;
+  --color-glass-bg: rgba(28, 28, 30, 0.52);
+  --color-glass-border: rgba(255, 255, 255, 0.05);
+  --color-glass-shadow: rgba(0, 0, 0, 0.5);
+  --color-text: #f5f5f7;
+  --color-text-secondary: #98989d;
+  --color-accent: #0a84ff;
+  --color-accent-hover: #409cff;
+  --color-border: rgba(255, 255, 255, 0.07);
+  --shadow-glass:
+    0 1px 3px rgba(0, 0, 0, 0.5),
+    0 4px 18px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 -0.5px 0 rgba(0, 0, 0, 0.45);
+  --shadow-card-hover:
+    0 2px 6px rgba(0, 0, 0, 0.55),
+    0 8px 28px rgba(0, 0, 0, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -0.5px 0 rgba(0, 0, 0, 0.5);
+  --shadow-modal:
+    0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 8px 48px rgba(0, 0, 0, 0.75),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+/* ── Base Styles ───────────────────────────────────────────── */
+@layer base {
+  body {
+    @apply bg-bg text-text font-sans antialiased;
+    margin: 0;
+    overflow: hidden;
+  }
+  * { box-sizing: border-box; }
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(128, 128, 128, 0.15);
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(128, 128, 128, 0.28);
+  }
+}
+
+/* ── Button Utilities ──────────────────────────────────────── */
+@utility btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s var(--ease-spring);
+  border-radius: var(--radius-xs);
+  padding: 4px 10px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+@utility btn-icon-menu {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+/* ── Glass Utilities ───────────────────────────────────────── */
+@utility glass {
+  background: var(--color-glass-bg);
+  backdrop-filter: blur(52px) saturate(210%);
+  -webkit-backdrop-filter: blur(52px) saturate(210%);
+  border: 0.5px solid var(--color-glass-border);
+  box-shadow: var(--shadow-glass);
+}
+@utility glass-medium {
+  background: var(--color-glass-bg);
+  backdrop-filter: blur(32px) saturate(210%);
+  -webkit-backdrop-filter: blur(32px) saturate(210%);
+  border: 0.5px solid var(--color-glass-border);
+}
+
+/* Glass surface card — no inset highlights, pure depth via external shadows */
+@utility glass-surface {
+  background: var(--color-glass-bg);
+  backdrop-filter: blur(40px) saturate(200%);
+  -webkit-backdrop-filter: blur(40px) saturate(200%);
+  border: 0.5px solid var(--color-glass-border);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 4px 12px rgba(0, 0, 0, 0.05);
+}
+.dark .glass-surface {
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.4),
+    0 4px 14px rgba(0, 0, 0, 0.5);
+}
+
+/* ── Card surface (elevated, non-glass) ────────────────────── */
+@utility card {
+  background: var(--color-surface);
+  border: 0.5px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-glass);
+}
+@utility card-hover {
+  transition: transform 0.2s var(--ease-spring), box-shadow 0.2s var(--ease-spring);
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-card-hover);
+  }
+}
+
+/* ── Subtle lift on hover for interactive surfaces ─────────── */
+@utility hover-lift {
+  transition: transform 0.18s var(--ease-spring), box-shadow 0.18s var(--ease-spring);
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-card-hover);
+  }
+}
+
+/* ── Depth shadow utilities (external-only, no insets) ─────── */
+@utility shadow-depth {
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.03),
+    0 4px 12px rgba(0, 0, 0, 0.05),
+    0 8px 28px rgba(0, 0, 0, 0.04);
+}
+@utility shadow-depth-lg {
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.04),
+    0 8px 20px rgba(0, 0, 0, 0.06),
+    0 16px 40px rgba(0, 0, 0, 0.05);
+}
+.dark .shadow-depth {
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.5),
+    0 4px 14px rgba(0, 0, 0, 0.6),
+    0 8px 32px rgba(0, 0, 0, 0.5);
+}
+.dark .shadow-depth-lg {
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.55),
+    0 8px 22px rgba(0, 0, 0, 0.65),
+    0 16px 44px rgba(0, 0, 0, 0.55);
+}

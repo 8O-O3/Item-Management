@@ -1,0 +1,1088 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>项目进度管理</title>
+<style>
+:root {
+  --bg: #f5f5f7;
+  --surface: rgba(255,255,255,0.72);
+  --surface-hover: rgba(255,255,255,0.85);
+  --surface-active: rgba(255,255,255,0.6);
+  --text: #1d1d1f;
+  --text-secondary: #86868b;
+  --accent: #0071e3;
+  --accent-hover: #0077ed;
+  --danger: #ff3b30;
+  --border: rgba(0,0,0,0.06);
+  --shadow: rgba(0,0,0,0.08);
+  --glass-bg: rgba(255,255,255,0.45);
+  --glass-border: rgba(255,255,255,0.35);
+  --glass-shadow: rgba(0,0,0,0.1);
+}
+
+[data-theme="dark"] {
+  --bg: #000000;
+  --surface: rgba(255,255,255,0.08);
+  --surface-hover: rgba(255,255,255,0.12);
+  --surface-active: rgba(255,255,255,0.06);
+  --text: #f5f5f7;
+  --text-secondary: #98989d;
+  --accent: #0a84ff;
+  --accent-hover: #409cff;
+  --danger: #ff453a;
+  --border: rgba(255,255,255,0.08);
+  --shadow: rgba(0,0,0,0.3);
+  --glass-bg: rgba(255,255,255,0.06);
+  --glass-border: rgba(255,255,255,0.12);
+  --glass-shadow: rgba(0,0,0,0.4);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #000000;
+    --surface: rgba(255,255,255,0.08);
+    --surface-hover: rgba(255,255,255,0.12);
+    --surface-active: rgba(255,255,255,0.06);
+    --text: #f5f5f7;
+    --text-secondary: #98989d;
+    --accent: #0a84ff;
+    --accent-hover: #409cff;
+    --danger: #ff453a;
+    --border: rgba(255,255,255,0.08);
+    --shadow: rgba(0,0,0,0.3);
+    --glass-bg: rgba(255,255,255,0.06);
+    --glass-border: rgba(255,255,255,0.12);
+    --glass-shadow: rgba(0,0,0,0.4);
+  }
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; transition: background 0.3s, color 0.3s; }
+
+.header { background: var(--glass-bg); backdrop-filter: blur(40px) saturate(180%); -webkit-backdrop-filter: blur(40px) saturate(180%); border-bottom: 0.5px solid var(--glass-border); padding: 0 24px; height: 56px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+.header h1 { font-size: 20px; font-weight: 600; letter-spacing: -0.5px; }
+.header-right { display: flex; gap: 10px; align-items: center; }
+
+/* iOS 26 风格玻璃按钮 */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  border: 0.5px solid var(--glass-border);
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: 0 2px 8px var(--glass-shadow), inset 0 0.5px 0 rgba(255,255,255,0.15);
+}
+
+.btn-primary { background: linear-gradient(135deg, rgba(0,113,227,0.9), rgba(0,122,255,0.8)); color: white; box-shadow: 0 4px 16px rgba(0,113,227,0.35), inset 0 0.5px 0 rgba(255,255,255,0.2); }
+.btn-primary:hover { background: linear-gradient(135deg, rgba(0,119,237,0.95), rgba(0,130,255,0.9)); box-shadow: 0 6px 24px rgba(0,113,227,0.5), inset 0 0.5px 0 rgba(255,255,255,0.25); transform: translateY(-1px); }
+.btn-primary:active { transform: translateY(0); box-shadow: 0 2px 8px rgba(0,113,227,0.3), inset 0 0.5px 0 rgba(255,255,255,0.15); }
+.btn-secondary { background: var(--glass-bg); color: var(--text); box-shadow: 0 2px 8px var(--glass-shadow), inset 0 0.5px 0 rgba(255,255,255,0.1); }
+.btn-secondary:hover { background: var(--surface-hover); transform: translateY(-1px); }
+.btn-secondary:active { background: var(--surface-active); transform: translateY(0); }
+.btn-ghost { background: transparent; color: var(--accent); border-color: transparent; box-shadow: none; }
+.btn-ghost:hover { background: rgba(0,113,227,0.1); }
+.btn-ghost:active { background: rgba(0,113,227,0.15); }
+.btn-danger { color: var(--danger); }
+.btn-danger:hover { background: rgba(255,59,48,0.1); }
+.btn-danger:active { background: rgba(255,59,48,0.15); }
+
+.theme-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 0.5px solid var(--glass-border);
+  cursor: pointer;
+  transition: all 0.25s;
+  box-shadow: 0 2px 8px var(--glass-shadow);
+  color: var(--text);
+}
+.theme-btn:hover { transform: scale(1.05); }
+.theme-btn:active { transform: scale(0.95); }
+
+.search-box { position: relative; }
+.search-box input {
+  padding: 9px 14px;
+  border: 0.5px solid var(--border);
+  border-radius: 10px;
+  font-size: 13px;
+  background: var(--surface);
+  color: var(--text);
+  width: 180px;
+  backdrop-filter: blur(20px);
+  transition: all 0.2s;
+}
+.search-box input:focus {
+  outline: none;
+  border-color: var(--accent);
+  width: 220px;
+  box-shadow: 0 0 0 3px rgba(0,113,227,0.1);
+}
+.search-box input::placeholder { color: var(--text-secondary); }
+
+.search-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--glass-bg);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: 0.5px solid var(--glass-border);
+  border-radius: 12px;
+  margin-top: 8px;
+  box-shadow: 0 8px 32px var(--glass-shadow);
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 1000;
+  display: none;
+}
+.search-results.active { display: block; }
+.search-result-item {
+  padding: 12px 16px;
+  cursor: pointer;
+  border-bottom: 0.5px solid var(--border);
+  transition: background 0.15s;
+}
+.search-result-item:last-child { border-bottom: none; }
+.search-result-item:hover { background: var(--surface); }
+.search-result-item .name { font-weight: 500; font-size: 14px; }
+.search-result-item .path { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+.search-result-item .highlight { background: rgba(0,113,227,0.2); color: var(--accent); }
+
+/* 侧边栏 */
+.layout { display: flex; height: calc(100vh - 56px); }
+.sidebar {
+  width: 260px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  border-right: 0.5px solid var(--glass-border);
+  padding: 16px 12px;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+.sidebar-section { margin-bottom: 24px; }
+.sidebar-title { font-size: 11px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; padding-left: 12px; }
+
+.folder-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; cursor: pointer; color: var(--text); font-weight: 500; transition: all 0.2s; }
+.folder-item:hover { background: var(--surface); }
+.folder-item.active { background: rgba(0,113,227,0.12); color: var(--accent); }
+.folder-item .count { margin-left: auto; font-size: 12px; color: var(--text-secondary); background: var(--surface); padding: 2px 8px; border-radius: 8px; }
+
+.project-item { display: flex; align-items: center; gap: 8px; padding: 9px 12px 9px 32px; border-radius: 10px; cursor: pointer; color: var(--text-secondary); transition: all 0.2s; }
+.project-item:hover { background: var(--surface); color: var(--text); }
+.project-item.active { background: rgba(0,113,227,0.1); color: var(--accent); font-weight: 500; }
+.project-item .folder-tag { font-size: 10px; color: var(--text-secondary); margin-left: auto; padding: 2px 6px; background: var(--surface); border-radius: 5px; }
+
+.add-btn { display: flex; align-items: center; gap: 6px; padding: 9px 12px; color: var(--text-secondary); cursor: pointer; font-size: 13px; transition: color 0.15s; border-radius: 10px; }
+.add-btn:hover { color: var(--accent); background: rgba(0,113,227,0.06); }
+
+/* 主内容区 */
+.main { flex: 1; padding: 28px 36px; overflow-y: auto; }
+.main::-webkit-scrollbar { width: 8px; }
+.main::-webkit-scrollbar-track { background: transparent; }
+.main::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+.main-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
+.main-title { font-size: 30px; font-weight: 600; letter-spacing: -0.5px; }
+.main-subtitle { font-size: 14px; color: var(--text-secondary); margin-top: 4px; }
+
+.breadcrumb { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; font-size: 13px; color: var(--text-secondary); }
+.breadcrumb a { color: var(--accent); text-decoration: none; }
+.breadcrumb a:hover { text-decoration: underline; }
+.breadcrumb span { color: var(--text); font-weight: 500; }
+
+/* 节点列表 */
+.nodes-list { display: flex; flex-direction: column; gap: 14px; }
+
+.node-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  border-radius: 20px;
+  border: 0.5px solid var(--glass-border);
+  box-shadow: 0 4px 24px var(--glass-shadow), inset 0 0.5px 0 rgba(255,255,255,0.08);
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.node-card.expanded { box-shadow: 0 8px 40px var(--glass-shadow), inset 0 0.5px 0 rgba(255,255,255,0.1); transform: translateY(-2px); }
+
+.node-header { display: flex; align-items: center; padding: 18px 22px; cursor: pointer; gap: 14px; transition: background 0.2s; }
+.node-header:hover { background: var(--surface); }
+.node-card.expanded .node-header { background: var(--surface); }
+
+.node-expand-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(0,113,227,0.15), rgba(0,122,255,0.1));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: var(--accent);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 0.5px solid rgba(0,113,227,0.15);
+}
+.node-card.expanded .node-expand-icon { background: linear-gradient(135deg, var(--accent), rgba(0,122,255,0.9)); color: white; transform: rotate(90deg); box-shadow: 0 4px 12px rgba(0,113,227,0.35); border-color: transparent; }
+
+.node-info { flex: 1; min-width: 0; }
+.node-title { font-size: 16px; font-weight: 600; }
+.node-card.collapsed .node-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.node-desc-preview { font-size: 13px; color: var(--text-secondary); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.node-meta { display: flex; gap: 18px; align-items: center; }
+.node-file-count { font-size: 12px; color: var(--text-secondary); }
+.node-timeline-count { font-size: 12px; color: var(--text-secondary); }
+.node-delete-btn { padding: 6px 12px; font-size: 12px; opacity: 0; transition: opacity 0.15s; }
+.node-header:hover .node-delete-btn { opacity: 1; }
+
+.node-body { display: none; padding: 24px; background: var(--surface); border-top: 0.5px solid var(--border); }
+.node-card.expanded .node-body { display: block; }
+
+.node-section { margin-bottom: 24px; }
+.node-section:last-child { margin-bottom: 0; }
+.node-section-label { font-size: 11px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px; }
+
+.files-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+.file-chip { display: flex; align-items: center; gap: 10px; padding: 10px 16px; background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-radius: 10px; font-size: 13px; color: var(--accent); border: 0.5px solid var(--glass-border); box-shadow: 0 2px 8px var(--glass-shadow); transition: all 0.2s; }
+.file-chip:hover { transform: translateY(-1px); box-shadow: 0 4px 16px var(--glass-shadow); }
+.file-chip .remove { color: var(--text-secondary); cursor: pointer; font-size: 15px; margin-left: 4px; }
+.file-chip .remove:hover { color: var(--danger); }
+.add-file-chip { background: transparent; border: 1.5px dashed var(--border); color: var(--text-secondary); cursor: pointer; box-shadow: none; }
+.add-file-chip:hover { border-color: var(--accent); color: var(--accent); background: rgba(0,113,227,0.05); }
+
+.timeline-list { max-height: 150px; overflow-y: auto; margin-bottom: 14px; }
+.timeline-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 0.5px solid var(--border); font-size: 13px; }
+.timeline-item:last-child { border-bottom: none; }
+.timeline-item .content { color: var(--text); }
+.timeline-item .time { color: var(--text-secondary); font-size: 12px; }
+.timeline-input-wrap { display: flex; gap: 10px; }
+.timeline-input-wrap input { flex: 1; padding: 12px 16px; border: 0.5px solid var(--border); border-radius: 12px; font-size: 13px; background: var(--surface); color: var(--text); backdrop-filter: blur(20px); transition: all 0.2s; }
+.timeline-input-wrap input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,113,227,0.1); }
+.timeline-input-wrap button { padding: 12px 18px; background: linear-gradient(135deg, var(--accent), rgba(0,122,255,0.9)); color: white; border: none; border-radius: 12px; font-size: 13px; font-weight: 500; cursor: pointer; box-shadow: 0 4px 16px rgba(0,113,227,0.3); transition: all 0.2s; }
+.timeline-input-wrap button:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,113,227,0.4); }
+
+.add-node-btn { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 18px; background: var(--glass-bg); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); border: 1.5px dashed var(--border); border-radius: 16px; cursor: pointer; font-size: 14px; color: var(--text-secondary); transition: all 0.2s; margin-top: 14px; }
+.add-node-btn:hover { background: var(--surface); border-color: var(--accent); color: var(--accent); box-shadow: 0 4px 20px var(--glass-shadow); }
+
+/* 空状态 */
+.empty-state { text-align: center; padding: 100px 40px; }
+.empty-state .icon { font-size: 72px; margin-bottom: 24px; opacity: 0.3; font-family: serif; }
+.empty-state h3 { font-size: 22px; font-weight: 600; margin-bottom: 10px; }
+.empty-state p { color: var(--text-secondary); font-size: 14px; }
+
+/* 弹窗 */
+.modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); justify-content: center; align-items: center; z-index: 200; }
+.modal.active { display: flex; }
+.modal-content { background: var(--glass-bg); backdrop-filter: blur(40px) saturate(180%); -webkit-backdrop-filter: blur(40px) saturate(180%); border-radius: 24px; padding: 32px; width: 500px; max-width: 90%; border: 0.5px solid var(--glass-border); box-shadow: 0 24px 80px rgba(0,0,0,0.3); }
+.modal-title { font-size: 24px; font-weight: 600; margin-bottom: 24px; }
+.modal-input { width: 100%; padding: 16px 18px; border: 0.5px solid var(--border); border-radius: 14px; font-size: 15px; margin-bottom: 16px; background: var(--surface); color: var(--text); backdrop-filter: blur(20px); transition: all 0.2s; }
+.modal-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,113,227,0.1); }
+.modal-textarea { width: 100%; padding: 16px 18px; border: 0.5px solid var(--border); border-radius: 14px; font-size: 15px; min-height: 100px; resize: vertical; margin-bottom: 16px; background: var(--surface); color: var(--text); backdrop-filter: blur(20px); }
+.modal-textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,113,227,0.1); }
+.modal-hint { font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; }
+.modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 8px; }
+
+.upload-zone { border: 2px dashed var(--border); border-radius: 18px; padding: 40px; text-align: center; cursor: pointer; transition: all 0.3s; background: var(--surface); backdrop-filter: blur(20px); }
+.upload-zone:hover, .upload-zone.dragover { border-color: var(--accent); background: rgba(0,113,227,0.05); box-shadow: 0 0 0 4px rgba(0,113,227,0.1); }
+.upload-zone input { display: none; }
+.upload-zone .icon { font-size: 40px; margin-bottom: 16px; color: var(--text-secondary); }
+.upload-zone .text { color: var(--text-secondary); font-size: 14px; }
+.upload-zone .text strong { color: var(--accent); }
+
+.file-list { margin-top: 18px; }
+.file-item { display: flex; align-items: center; gap: 14px; padding: 14px; background: var(--surface); border-radius: 12px; margin-bottom: 10px; border: 0.5px solid var(--border); }
+.file-item .info { flex: 1; }
+.file-item .name { font-weight: 500; font-size: 14px; }
+.file-item .size { font-size: 12px; color: var(--text-secondary); }
+.file-item .remove { color: var(--danger); cursor: pointer; padding: 4px; font-size: 18px; }
+
+.stat-card {
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  border-radius: 12px;
+  padding: 18px;
+  text-align: center;
+}
+.stat-value { font-size: 32px; font-weight: 600; color: var(--accent); }
+.stat-label { font-size: 12px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+</style>
+</head>
+<body>
+<header class="header">
+  <h1>Project Manager</h1>
+  <div class="header-right">
+    <div class="search-box" style="position:relative;">
+      <input type="text" id="searchInput" placeholder="Search..." oninput="handleSearch(this.value)" onblur="setTimeout(()=>hideSearch(),200)">
+      <div class="search-results" id="searchResults"></div>
+    </div>
+    <button class="btn btn-secondary" onclick="openStatsModal()">Stats</button>
+    <button class="btn btn-secondary" onclick="exportData()">Export</button>
+    <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">Import</button>
+    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+    <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">A</button>
+    <button class="btn btn-secondary" onclick="openFolderModal()">+ Folder</button>
+    <button class="btn btn-primary" onclick="openProjectModal()">+ Project</button>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-title">Folders</div>
+      <div id="folderList"></div>
+      <div class="add-btn" onclick="openFolderModal()">+ New Folder</div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">All Projects</div>
+      <div id="projectList"></div>
+    </div>
+  </aside>
+
+  <main class="main" id="main">
+    <div class="empty-state">
+      <div class="icon">[...]</div>
+      <h3>Select or create a project</h3>
+      <p>Choose a folder from the left sidebar or create a new project to get started</p>
+    </div>
+  </main>
+</div>
+
+<!-- Folder Modal -->
+<div class="modal" id="folderModal">
+  <div class="modal-content">
+    <div class="modal-title" id="folderModalTitle">New Folder</div>
+    <input type="text" class="modal-input" id="folderNameInput" placeholder="Folder name">
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeFolderModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmFolder()">Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- Project Modal -->
+<div class="modal" id="projectModal">
+  <div class="modal-content">
+    <div class="modal-title" id="projectModalTitle">New Project</div>
+    <select class="modal-input" id="projectFolderSelect" style="cursor:pointer;">
+      <option value="">No folder</option>
+    </select>
+    <input type="text" class="modal-input" id="projectNameInput" placeholder="Project name">
+    <textarea class="modal-textarea" id="projectDescInput" placeholder="Description (optional)"></textarea>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeProjectModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmProject()">Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- Node Modal -->
+<div class="modal" id="nodeModal">
+  <div class="modal-content">
+    <div class="modal-title" id="nodeModalTitle">Add Node</div>
+    <input type="text" class="modal-input" id="nodeTitleInput" placeholder="Node name, e.g.: Requirements, Development, Testing">
+    <textarea class="modal-textarea" id="nodeDescInput" placeholder="Description (optional)"></textarea>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeNodeModal()">Cancel</button>
+      <button class="btn btn-primary" id="nodeConfirmBtn" onclick="confirmNode()">Add</button>
+    </div>
+  </div>
+</div>
+
+<!-- File Modal -->
+<div class="modal" id="fileModal">
+  <div class="modal-content" style="width:580px;">
+    <div class="modal-title">Files</div>
+    <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+      <input type="file" id="fileInput" multiple onchange="handleFileSelect(event)">
+      <div class="icon">[+]</div>
+      <div class="text">Drag files here, or <strong>click to upload</strong></div>
+    </div>
+    <div id="pendingFiles" class="file-list"></div>
+    <div id="existingFiles" class="file-list"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeFileModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmFiles()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- Stats Modal -->
+<div class="modal" id="statsModal">
+  <div class="modal-content" style="width:520px;">
+    <div class="modal-title">Statistics</div>
+    <div id="statsContent"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeStatsModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== Theme =====
+function getPreferredTheme() {
+  const stored = localStorage.getItem('theme');
+  if (stored === 'dark' || stored === 'light') return stored;
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
+function setTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('theme', theme);
+  document.getElementById('themeBtn').textContent = theme === 'dark' ? 'A' : 'A';
+}
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme');
+  setTheme(current === 'dark' ? 'light' : 'dark');
+}
+
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+  if (!localStorage.getItem('theme')) {
+    setTheme(e.matches ? 'dark' : 'light');
+  }
+});
+
+// ===== IndexedDB - 固定数据库名，不再更改 =====
+const DB_NAME = 'ProjectManager';
+const DB_VERSION = 1;
+let db;
+
+function initDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onerror = () => reject(req.error);
+    req.onsuccess = () => { db = req.result; resolve(db); };
+    req.onupgradeneeded = (e) => {
+      const database = e.target.result;
+      if (!database.objectStoreNames.contains('data')) {
+        database.createObjectStore('data', { keyPath: 'id', autoIncrement: true });
+      }
+    };
+  });
+}
+
+function dbOp(mode) {
+  return db.transaction('data', mode).objectStore('data');
+}
+
+async function dbGet(type) {
+  return new Promise((resolve, reject) => {
+    const store = dbOp('readonly');
+    const req = store.getAll();
+    req.onsuccess = () => resolve(req.result.filter(x => x.type === type));
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function dbSave(item) {
+  return new Promise((resolve, reject) => {
+    const store = dbOp('readwrite');
+    const req = item.id ? store.put(item) : store.add(item);
+    req.onsuccess = () => {
+      if (!item.id) item.id = req.result;
+      resolve(req.result);
+    };
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function dbDelete(id) {
+  return new Promise((resolve, reject) => {
+    const store = dbOp('readwrite');
+    const req = store.delete(id);
+    req.onsuccess = () => resolve();
+    req.onerror = () => reject(req.error);
+  });
+}
+
+// ===== State =====
+let folders = [];
+let projects = [];
+let currentFolder = null;
+let currentProject = null;
+let expandedNodes = new Set();
+let editingNodeIdx = null;
+let fileContext = null;
+let pendingFiles = [];
+
+// ===== Init =====
+async function init() {
+  setTheme(getPreferredTheme());
+  await initDB();
+  folders = await dbGet('folder');
+  projects = await dbGet('project');
+  renderSidebar();
+  if (projects.length > 0) {
+    selectProject(projects[0]);
+  }
+}
+
+// ===== Sidebar =====
+function renderSidebar() {
+  const folderList = document.getElementById('folderList');
+  const projectList = document.getElementById('projectList');
+
+  folderList.innerHTML = `
+    <div class="folder-item ${currentFolder === null ? 'active' : ''}" onclick="selectFolder(null)">
+      <span>All</span>
+      <span class="count">${projects.length}</span>
+    </div>
+    ${folders.map(f => `
+      <div class="folder-item ${currentFolder === f.id ? 'active' : ''}" onclick="selectFolder(${f.id})">
+        <span>${escapeHtml(f.name)}</span>
+        <span class="count">${projects.filter(p => p.folderId === f.id).length}</span>
+      </div>
+    `).join('')}
+  `;
+
+  const visibleProjects = currentFolder
+    ? projects.filter(p => p.folderId === currentFolder)
+    : projects;
+
+  projectList.innerHTML = visibleProjects.map(p => {
+    const folder = folders.find(f => f.id === p.folderId);
+    return `
+      <div class="project-item ${currentProject && currentProject.id === p.id ? 'active' : ''}" onclick="selectProjectById(${p.id})">
+        <span>${escapeHtml(p.name)}</span>
+        ${folder ? `<span class="folder-tag">${escapeHtml(folder.name)}</span>` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+// ===== Selection =====
+function selectFolder(id) {
+  currentFolder = id;
+  currentProject = null;
+  expandedNodes.clear();
+  renderSidebar();
+  renderBoard();
+}
+
+function selectProject(p) {
+  currentProject = p;
+  currentFolder = p ? p.folderId : null;
+  expandedNodes.clear();
+  renderSidebar();
+  renderBoard();
+}
+
+function selectProjectById(id) {
+  const p = projects.find(x => x.id === id);
+  if (p) selectProject(p);
+}
+
+// ===== Node Toggle =====
+function toggleNode(idx) {
+  if (expandedNodes.has(idx)) {
+    expandedNodes.delete(idx);
+  } else {
+    if (expandedNodes.size >= 3) {
+      const oldest = expandedNodes.values().next().value;
+      expandedNodes.delete(oldest);
+    }
+    expandedNodes.add(idx);
+  }
+  renderBoard();
+}
+
+// ===== Search =====
+function handleSearch(query) {
+  const resultsEl = document.getElementById('searchResults');
+  if (!query.trim()) { resultsEl.classList.remove('active'); return; }
+
+  const q = query.toLowerCase();
+  const results = [];
+
+  // Search projects
+  projects.forEach(p => {
+    if (p.name.toLowerCase().includes(q)) {
+      results.push({ type: 'project', name: p.name, path: 'Project', id: p.id });
+    }
+    // Search nodes
+    (p.nodes || []).forEach((n, ni) => {
+      if (n.title.toLowerCase().includes(q) || (n.desc && n.desc.toLowerCase().includes(q))) {
+        results.push({ type: 'node', name: n.title, path: p.name + ' / Node ' + (ni+1), id: p.id, nodeIdx: ni });
+      }
+    });
+  });
+
+  if (results.length === 0) {
+    resultsEl.innerHTML = '<div style="padding:16px;color:var(--text-secondary);">No results</div>';
+  } else {
+    resultsEl.innerHTML = results.map(r => `
+      <div class="search-result-item" onclick="jumpToResult(${r.id}, ${r.nodeIdx !== undefined ? r.nodeIdx : -1})">
+        <div class="name">${highlightText(r.name, query)}</div>
+        <div class="path">${r.path}</div>
+      </div>
+    `).join('');
+  }
+  resultsEl.classList.add('active');
+}
+
+function hideSearch() {
+  document.getElementById('searchResults').classList.remove('active');
+}
+
+function jumpToResult(projectId, nodeIdx) {
+  const p = projects.find(x => x.id === projectId);
+  if (!p) return;
+  selectProject(p);
+  if (nodeIdx >= 0) {
+    setTimeout(() => {
+      expandedNodes.clear();
+      expandedNodes.add(nodeIdx);
+      renderBoard();
+    }, 100);
+  }
+  document.getElementById('searchInput').value = '';
+  hideSearch();
+}
+
+function highlightText(text, query) {
+  if (!query) return escapeHtml(text);
+  const regex = new RegExp('(' + query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+  return escapeHtml(text).replace(regex, '<span class="highlight">$1</span>');
+}
+
+// ===== Stats =====
+function openStatsModal() {
+  const totalProjects = projects.length;
+  const totalNodes = projects.reduce((sum, p) => sum + (p.nodes || []).length, 0);
+  const totalFiles = projects.reduce((sum, p) => sum + (p.nodes || []).reduce((s, n) => s + (n.files || []).length, 0), 0);
+  const totalTimeline = projects.reduce((sum, p) => sum + (p.nodes || []).reduce((s, n) => s + (n.timeline || []).length, 0), 0);
+  const foldersCount = folders.length;
+
+  const now = new Date();
+  const weekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
+  let recentNodes = 0;
+  projects.forEach(p => {
+    (p.nodes || []).forEach(n => {
+      const nodeDate = new Date(n.createdAt || 0);
+      if (nodeDate > weekAgo) recentNodes++;
+    });
+  });
+
+  const content = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+      <div class="stat-card"><div class="stat-value">${totalProjects}</div><div class="stat-label">Projects</div></div>
+      <div class="stat-card"><div class="stat-value">${foldersCount}</div><div class="stat-label">Folders</div></div>
+      <div class="stat-card"><div class="stat-value">${totalNodes}</div><div class="stat-label">Nodes</div></div>
+      <div class="stat-card"><div class="stat-value">${totalFiles}</div><div class="stat-label">Files</div></div>
+      <div class="stat-card"><div class="stat-value">${totalTimeline}</div><div class="stat-label">Timeline Records</div></div>
+      <div class="stat-card"><div class="stat-value">${recentNodes}</div><div class="stat-label">New Nodes (7d)</div></div>
+    </div>
+    <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border);">
+      <div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px;">By Folder</div>
+      ${folders.length === 0 ? '<div style="color:var(--text-secondary);font-size:13px;">No folders</div>' : folders.map(f => {
+        const count = projects.filter(p => p.folderId === f.id).length;
+        return `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:0.5px solid var(--border);font-size:13px;">
+          <span style="color:var(--text);">${escapeHtml(f.name)}</span><span style="color:var(--text-secondary);">${count} project${count !== 1 ? 's' : ''}</span>
+        </div>`;
+      }).join('') + `<div style="display:flex;justify-content:space-between;padding:8px 0;font-size:13px;font-weight:500;">
+        <span>Uncategorized</span><span>${projects.filter(p => !p.folderId).length}</span>
+      </div>`}
+    </div>
+  `;
+  document.getElementById('statsContent').innerHTML = content;
+  document.getElementById('statsModal').classList.add('active');
+}
+
+function closeStatsModal() {
+  document.getElementById('statsModal').classList.remove('active');
+}
+
+// ===== Board =====
+function renderBoard() {
+  const main = document.getElementById('main');
+  if (!currentProject) {
+    main.innerHTML = `<div class="empty-state"><div class="icon">[ ]</div><h3>Select or create a project</h3><p>Choose a folder from the left sidebar or create a new project to get started</p></div>`;
+    return;
+  }
+
+  const nodes = currentProject.nodes || [];
+  const folder = folders.find(f => f.id === currentProject.folderId);
+
+  main.innerHTML = `
+    <div class="main-header">
+      <div>
+        <div class="main-title">${escapeHtml(currentProject.name)}</div>
+        ${currentProject.desc ? `<div class="main-subtitle">${escapeHtml(currentProject.desc)}</div>` : ''}
+      </div>
+      <button class="btn btn-secondary" onclick="deleteProject()">Delete</button>
+    </div>
+
+    <div class="breadcrumb">
+      <a href="#" onclick="selectFolder(null); return false;">All</a>
+      ${folder ? `<span>/</span><span>${escapeHtml(folder.name)}</span>` : ''}
+      <span>/</span>
+      <span>${escapeHtml(currentProject.name)}</span>
+    </div>
+
+    ${nodes.length === 0 ? `
+      <div style="text-align:center;padding:80px;color:var(--text-secondary);">
+        <div style="font-size:56px;margin-bottom:20px;opacity:0.3;font-family:serit;">[...]</div>
+        <div style="font-size:18px;font-weight:500;color:var(--text);margin-bottom:10px;">No nodes yet</div>
+        <div style="font-size:14px;">Click the button below to add the first node</div>
+      </div>
+    ` : `
+      <div class="nodes-list">
+        ${nodes.map((node, idx) => {
+          const isExpanded = expandedNodes.has(idx);
+          return `
+            <div class="node-card ${isExpanded ? 'expanded' : 'collapsed'}">
+              <div class="node-header" onclick="toggleNode(${idx})">
+                <div class="node-expand-icon">${isExpanded ? '<' : '>'}</div>
+                <div class="node-info">
+                  <div class="node-title">${escapeHtml(node.title)}</div>
+                  ${node.desc && !isExpanded ? `<div class="node-desc-preview">${escapeHtml(node.desc)}</div>` : ''}
+                </div>
+                <div class="node-meta">
+                  <span class="node-file-count">[F] ${(node.files||[]).length}</span>
+                  <span class="node-timeline-count">[T] ${(node.timeline||[]).length}</span>
+                  <button class="btn btn-ghost btn-danger node-delete-btn" onclick="event.stopPropagation(); deleteNode(${idx})">Delete</button>
+                </div>
+              </div>
+              ${isExpanded ? `
+                <div class="node-body">
+                  ${node.desc ? `<div style="font-size:14px;color:var(--text-secondary);margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border);">${escapeHtml(node.desc)}</div>` : ''}
+
+                  <div class="node-section">
+                    <div class="node-section-label">Attachments</div>
+                    <div class="files-grid">
+                      ${(node.files||[]).map((f,fi) => `
+                        <div class="file-chip">
+                          <a href="${f.data || '#'}" target="_blank" download="${escapeHtml(f.name)}" style="color:var(--accent);text-decoration:none;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escapeHtml(f.path||'')}">${escapeHtml(f.name)}</a>
+                          <span class="remove" onclick="deleteFile(${idx},${fi})">x</span>
+                        </div>
+                      `).join('')}
+                      <div class="file-chip add-file-chip" onclick="openFileModal(${idx})">+ Add</div>
+                    </div>
+                  </div>
+
+                  <div class="node-section">
+                    <div class="node-section-label">Timeline</div>
+                    <div class="timeline-list">
+                      ${(node.timeline||[]).map(t => `
+                        <div class="timeline-item">
+                          <span class="content">${escapeHtml(t.content)}</span>
+                          <span class="time">${formatTime(t.time)}</span>
+                        </div>
+                      `).join('')}
+                      ${(node.timeline||[]).length === 0 ? '<div style="color:var(--text-secondary);font-size:13px;padding:10px 0;">No records</div>' : ''}
+                    </div>
+                    <div class="timeline-input-wrap">
+                      <input type="text" placeholder="Add a note..." id="tl-${idx}" onkeydown="handleTimelineKey(event, ${idx})">
+                      <button onclick="addTimeline(${idx})">Add</button>
+                    </div>
+                  </div>
+                </div>
+              ` : ''}
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `}
+
+    <div class="add-node-btn" onclick="openNodeModal()">+ Add Node</div>
+  `;
+}
+
+function handleTimelineKey(e, nodeIdx) {
+  if (e.key === 'Enter' && !e.isComposing && e.keyCode !== 229) {
+    e.preventDefault();
+    addTimeline(nodeIdx);
+  }
+}
+
+// ===== Modals =====
+let editingFolderId = null;
+
+function openFolderModal(id = null) {
+  editingFolderId = id;
+  const title = document.getElementById('folderModalTitle');
+  const input = document.getElementById('folderNameInput');
+  title.textContent = id ? 'Edit Folder' : 'New Folder';
+  input.value = id ? (folders.find(f=>f.id===id)?.name || '') : '';
+  document.getElementById('folderModal').classList.add('active');
+  input.focus();
+}
+function closeFolderModal() { document.getElementById('folderModal').classList.remove('active'); editingFolderId = null; }
+
+function openProjectModal() {
+  const select = document.getElementById('projectFolderSelect');
+  select.innerHTML = `<option value="">No folder</option>` + folders.map(f => `<option value="${f.id}">${escapeHtml(f.name)}</option>`).join('');
+  document.getElementById('projectModal').classList.add('active');
+  document.getElementById('projectNameInput').value = '';
+  document.getElementById('projectDescInput').value = '';
+  document.getElementById('projectNameInput').focus();
+}
+function closeProjectModal() { document.getElementById('projectModal').classList.remove('active'); }
+
+function openNodeModal(idx = null) {
+  editingNodeIdx = idx;
+  const title = document.getElementById('nodeModalTitle');
+  const btn = document.getElementById('nodeConfirmBtn');
+  title.textContent = idx !== null ? 'Edit Node' : 'Add Node';
+  btn.textContent = idx !== null ? 'Save' : 'Add';
+  if (idx !== null && currentProject) {
+    document.getElementById('nodeTitleInput').value = currentProject.nodes[idx]?.title || '';
+    document.getElementById('nodeDescInput').value = currentProject.nodes[idx]?.desc || '';
+  } else {
+    document.getElementById('nodeTitleInput').value = '';
+    document.getElementById('nodeDescInput').value = '';
+  }
+  document.getElementById('nodeModal').classList.add('active');
+  document.getElementById('nodeTitleInput').focus();
+}
+function closeNodeModal() { document.getElementById('nodeModal').classList.remove('active'); editingNodeIdx = null; }
+
+function openFileModal(nodeIdx) {
+  if (!currentProject) return;
+  fileContext = { nodeIdx };
+  pendingFiles = [];
+  renderFileModal();
+  document.getElementById('fileModal').classList.add('active');
+}
+function closeFileModal() { document.getElementById('fileModal').classList.remove('active'); fileContext = null; pendingFiles = []; }
+
+function renderFileModal() {
+  const pendingEl = document.getElementById('pendingFiles');
+  const existingEl = document.getElementById('existingFiles');
+  const node = currentProject?.nodes?.[fileContext?.nodeIdx];
+  const existing = node?.files || [];
+
+  pendingEl.innerHTML = pendingFiles.length ? `<div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;">Pending:</div>` +
+    pendingFiles.map((f, i) => `
+      <div class="file-item">
+        <div class="info"><div class="name">${escapeHtml(f.name)}</div><div class="size">${formatSize(f.size)}</div></div>
+        <div class="remove" onclick="removePending(${i})">x</div>
+      </div>
+    `).join('') : '';
+
+  existingEl.innerHTML = existing.length ? `<div style="font-size:12px;color:var(--text-secondary);margin:18px 0 10px;">Attached:</div>` +
+    existing.map((f, i) => `
+      <div class="file-item">
+        <div class="info"><div class="name">${escapeHtml(f.name)}</div>${f.size ? `<div class="size">${formatSize(f.size)}</div>` : ''}</div>
+        <div class="remove" onclick="removeExisting(${i})">x</div>
+      </div>
+    `).join('') : '';
+}
+
+// ===== Data Ops =====
+async function confirmFolder() {
+  const name = document.getElementById('folderNameInput').value.trim();
+  if (!name) return;
+  if (editingFolderId) {
+    const folder = folders.find(f => f.id === editingFolderId);
+    folder.name = name;
+    await dbSave(folder);
+  } else {
+    const folder = { type: 'folder', name, createdAt: new Date().toISOString() };
+    await dbSave(folder);
+    folders.push(folder);
+  }
+  closeFolderModal();
+  renderSidebar();
+}
+
+async function deleteFolder(id) {
+  if (!confirm('Delete folder? Projects inside will remain.')) return;
+  await dbDelete(id);
+  folders = folders.filter(f => f.id !== id);
+  if (currentFolder === id) currentFolder = null;
+  renderSidebar();
+}
+
+async function confirmProject() {
+  const name = document.getElementById('projectNameInput').value.trim();
+  if (!name) return;
+  const folderSelect = document.getElementById('projectFolderSelect').value;
+  const folderId = folderSelect ? parseInt(folderSelect) : null;
+  const desc = document.getElementById('projectDescInput').value.trim();
+  const project = { type: 'project', name, desc, folderId, nodes: [], createdAt: new Date().toISOString() };
+  await dbSave(project);
+  projects.push(project);
+  closeProjectModal();
+  expandedNodes.clear();
+  renderSidebar();
+  selectProject(project);
+}
+
+async function deleteProject() {
+  if (!confirm('Delete this project?')) return;
+  await dbDelete(currentProject.id);
+  projects = projects.filter(p => p.id !== currentProject.id);
+  currentProject = null;
+  expandedNodes.clear();
+  renderSidebar();
+  renderBoard();
+}
+
+async function confirmNode() {
+  const title = document.getElementById('nodeTitleInput').value.trim();
+  const desc = document.getElementById('nodeDescInput').value.trim();
+  if (!title) return;
+  currentProject.nodes = currentProject.nodes || [];
+  if (editingNodeIdx !== null) {
+    currentProject.nodes[editingNodeIdx].title = title;
+    currentProject.nodes[editingNodeIdx].desc = desc;
+  } else {
+    currentProject.nodes.push({ title, desc, files: [], timeline: [], createdAt: new Date().toISOString() });
+  }
+  await dbSave(currentProject);
+  closeNodeModal();
+  renderBoard();
+}
+
+async function deleteNode(idx) {
+  currentProject.nodes.splice(idx, 1);
+  expandedNodes.delete(idx);
+  const newExpanded = new Set();
+  expandedNodes.forEach(i => { if (i > idx) newExpanded.add(i - 1); else if (i < idx) newExpanded.add(i); });
+  expandedNodes = newExpanded;
+  await dbSave(currentProject);
+  renderBoard();
+}
+
+async function confirmFiles() {
+  const node = currentProject.nodes[fileContext.nodeIdx];
+  node.files = node.files || [];
+  for (const f of pendingFiles) {
+    node.files.push({ name: f.name, path: f.path || '', size: f.size, data: f.data, addedAt: new Date().toISOString() });
+  }
+  await dbSave(currentProject);
+  closeFileModal();
+  renderBoard();
+}
+
+async function deleteFile(nodeIdx, fileIdx) {
+  currentProject.nodes[nodeIdx].files.splice(fileIdx, 1);
+  await dbSave(currentProject);
+  renderBoard();
+}
+
+async function addTimeline(nodeIdx) {
+  const input = document.getElementById(`tl-${nodeIdx}`);
+  const content = input.value.trim();
+  if (!content) return;
+  currentProject.nodes[nodeIdx].timeline = currentProject.nodes[nodeIdx].timeline || [];
+  currentProject.nodes[nodeIdx].timeline.push({ content, time: new Date().toISOString() });
+  await dbSave(currentProject);
+  input.value = '';
+  renderBoard();
+}
+
+// ===== File Handling =====
+function handleFileSelect(e) { addFiles(Array.from(e.target.files)); }
+
+function addFiles(files) {
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      pendingFiles.push({ name: file.name, size: file.size, type: file.type, data: reader.result });
+      renderFileModal();
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function removePending(idx) { pendingFiles.splice(idx, 1); renderFileModal(); }
+function removeExisting(idx) { currentProject.nodes[fileContext.nodeIdx].files.splice(idx, 1); dbSave(currentProject); renderFileModal(); }
+
+const uploadZone = document.getElementById('uploadZone');
+uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+uploadZone.addEventListener('drop', e => { e.preventDefault(); uploadZone.classList.remove('dragover'); addFiles(Array.from(e.dataTransfer.files)); });
+
+// ===== Utils =====
+function escapeHtml(str) { if (str == null) return ''; const div = document.createElement('div'); div.textContent = str; return div.innerHTML; }
+function formatTime(dt) { if (!dt) return ''; const d = new Date(dt); return `${d.getMonth()+1}/${d.getDate()} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`; }
+function formatSize(bytes) { if (!bytes) return ''; if (bytes < 1024) return bytes + ' B'; if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB'; return (bytes/1024/1024).toFixed(1) + ' MB'; }
+
+async function exportData() {
+  const data = {
+    folders: folders,
+    projects: projects,
+    exportedAt: new Date().toISOString()
+  };
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `project-manager-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+async function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (data.folders && data.projects) {
+        if (!confirm(`Import ${data.projects.length} projects and ${data.folders.length} folders? This will merge with existing data.`)) return;
+        // 重新分配 id 避免冲突
+        const folderIdMap = {};
+        for (const f of data.folders) {
+          const oldId = f.id;
+          delete f.id;
+          const newId = await dbSave(f);
+          folderIdMap[oldId] = newId;
+          folders.push(f);
+        }
+        for (const p of data.projects) {
+          const oldId = p.id;
+          delete p.id;
+          p.folderId = p.folderId ? (folderIdMap[p.folderId] || null) : null;
+          const newId = await dbSave(p);
+          projects.push(p);
+        }
+        renderSidebar();
+        if (projects.length > 0) selectProject(projects[0]);
+        alert('Import successful!');
+      } else {
+        alert('Invalid backup file format.');
+      }
+    } catch (err) {
+      alert('Failed to import: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+// ===== Keyboard =====
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeFolderModal(); closeProjectModal(); closeNodeModal(); closeFileModal(); } });
+function handleEnterKey(e, callback) { if (e.key === 'Enter' && !e.isComposing && e.keyCode !== 229) { e.preventDefault(); callback(); } }
+document.getElementById('folderNameInput').addEventListener('keydown', e => { handleEnterKey(e, confirmFolder); });
+document.getElementById('projectNameInput').addEventListener('keydown', e => { handleEnterKey(e, confirmProject); });
+document.getElementById('nodeTitleInput').addEventListener('keydown', e => { handleEnterKey(e, confirmNode); });
+
+// ===== Start =====
+init().catch(console.error);
+</script>
+</body>
+</html>

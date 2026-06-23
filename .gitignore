@@ -1,0 +1,16 @@
+# Dependencies
+tauri-app/node_modules/
+
+# Build output
+tauri-app/src-tauri/target/
+tauri-app/dist/
+
+# Environment variables
+.env
+
+# macOS system files
+.DS_Store
+
+# IDE
+.vscode/
+.idea/

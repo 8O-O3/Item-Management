@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Utils Tests</title>
+<style>
+    body { font-family: -apple-system, sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; }
+    h1 { font-size: 24px; margin-bottom: 8px; }
+    .summary { font-size: 14px; margin-bottom: 24px; }
+    .summary.pass { color: #34c759; }
+    .summary.fail { color: #ff3b30; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { text-align: left; padding: 8px 12px; background: #f5f5f7; border-bottom: 1px solid #ddd; }
+    td { padding: 8px 12px; border-bottom: 0.5px solid #eee; }
+    .pass { color: #34c759; font-weight: 600; }
+    .fail { color: #ff3b30; font-weight: 600; }
+    .result-pass { background: rgba(52,199,89,0.05); }
+    .result-fail { background: rgba(255,59,48,0.05); }
+</style>
+</head>
+<body>
+<h1>Utils Tests</h1>
+<div class="summary" id="summary">Running...</div>
+<table id="results">
+    <thead><tr><th>Status</th><th>Test</th><th>Expected</th><th>Actual</th></tr></thead>
+    <tbody></tbody>
+</table>
+<script type="module">
+    import { escapeHtml, formatTime, formatSize, handleEnterKey } from '../src/js/utils.js';
+
+    let passed = 0, failed = 0;
+    const results = [];
+
+    function assert(actual, expected, name) {
+        const pass = actual === expected;
+        if (pass) passed++; else failed++;
+        results.push({ name, passed: pass, expected: String(expected), actual: String(actual) });
+    }
+
+    // ── escapeHtml ──
+    assert(escapeHtml('<script>'), '&lt;script&gt;', 'escapeHtml: escapes < and >');
+    assert(escapeHtml('"test"'), '&quot;test&quot;', 'escapeHtml: escapes double quotes');
+    assert(escapeHtml("'test'"), "'test'", "escapeHtml: single quotes passed through");
+    assert(escapeHtml('&amp;'), '&amp;amp;', 'escapeHtml: escapes ampersand');
+    assert(escapeHtml('hello'), 'hello', 'escapeHtml: plain text unchanged');
+    assert(escapeHtml(''), '', 'escapeHtml: empty string');
+    assert(escapeHtml(null), '', 'escapeHtml: null → empty');
+    assert(escapeHtml(undefined), '', 'escapeHtml: undefined → empty');
+
+    // ── formatSize ──
+    assert(formatSize(0), '', 'formatSize: 0 → empty');
+    assert(formatSize(null), '', 'formatSize: null → empty');
+    assert(formatSize(500), '500 B', 'formatSize: 500 B');
+    assert(formatSize(1023), '1023 B', 'formatSize: 1023 B');
+    assert(formatSize(1024), '1.0 KB', 'formatSize: 1.0 KB');
+    assert(formatSize(1536), '1.5 KB', 'formatSize: 1.5 KB');
+    assert(formatSize(1048576), '1.0 MB', 'formatSize: 1.0 MB');
+    assert(formatSize(2097152), '2.0 MB', 'formatSize: 2.0 MB');
+
+    // ── formatTime ──
+    assert(formatTime(null), '', 'formatTime: null → empty');
+    assert(formatTime(''), '', 'formatTime: empty → empty');
+    const dt = '2024-01-15T08:30:00Z';
+    const formatted = formatTime(dt);
+    const hasSlash = formatted.indexOf('/') !== -1;
+    assert(hasSlash, true, 'formatTime: contains / separator');
+    const hasColon = formatted.indexOf(':') !== -1;
+    assert(hasColon, true, 'formatTime: contains : for time');
+
+    // ── handleEnterKey ──
+    let cb = false;
+    handleEnterKey({ key: 'Enter', isComposing: false, keyCode: 13, preventDefault: () => {} }, () => { cb = true; });
+    assert(cb, true, 'handleEnterKey: Enter triggers callback');
+    cb = false;
+    handleEnterKey({ key: 'Enter', isComposing: true, keyCode: 229, preventDefault: () => {} }, () => { cb = true; });
+    assert(cb, false, 'handleEnterKey: IME composition ignored');
+    cb = false;
+    handleEnterKey({ key: 'a', isComposing: false, keyCode: 65, preventDefault: () => {} }, () => { cb = true; });
+    assert(cb, false, 'handleEnterKey: non-Enter key ignored');
+
+    // ── Render results ──
+    const total = passed + failed;
+    document.getElementById('summary').textContent = `${passed}/${total} passed`;
+    document.getElementById('summary').className = 'summary ' + (failed === 0 ? 'pass' : 'fail');
+
+    const tbody = document.querySelector('tbody');
+    results.forEach(r => {
+        const tr = document.createElement('tr');
+        tr.className = r.passed ? 'result-pass' : 'result-fail';
+        tr.innerHTML = `<td class="${r.passed ? 'pass' : 'fail'}">${r.passed ? 'PASS' : 'FAIL'}</td>
+            <td>${r.name}</td><td>${r.expected}</td><td>${r.actual}</td>`;
+        tbody.appendChild(tr);
+    });
+</script>
+</body>
+</html>

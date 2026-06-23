@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project Manager</title>
+<link rel="stylesheet" href="css/main.css">
+<script defer src="js/alpine.min.js"></script>
+</head>
+<body x-data>
+
+<!-- ── Header ──────────────────────────────────────────────── -->
+<header class="header">
+  <h1>Project Manager <span id="testResult" style="font-size:10px;margin-left:8px;color:var(--danger);"></span></h1>
+  <div class="header-right">
+    <div class="search-box" style="position:relative;">
+      <input type="text" id="searchInput" placeholder="Search..." @input.debounce.200ms="window.handleSearch($el.value)" @blur="setTimeout(() => window.hideSearch(), 200)">
+      <div class="search-results" id="searchResults"></div>
+    </div>
+    <button class="btn" @click="window.toggleChat()">Chat</button>
+    <button class="btn" @click="window.openStatsModal()">Stats</button>
+    <button class="btn" @click="window.exportData()">Export</button>
+    <button class="btn" @click="document.getElementById('importFile').click()">Import</button>
+    <input type="file" id="importFile" accept=".json" style="display:none" @change="window.importData($event)">
+    <button class="btn" @click="window.openFolderModal()">+ Folder</button>
+    <button class="btn" data-variant="primary" @click="window.openProjectModal()">+ Project</button>
+  </div>
+</header>
+
+<!-- ── Layout ──────────────────────────────────────────────── -->
+<div class="layout">
+  <aside class="sidebar">
+    <div id="sidebarContent"></div>
+    <div class="sidebar-footer">
+      <button class="settings-footer-btn" id="settingsFooterBtn" @click="window.toggleSettings()" title="Settings">&#9881;</button>
+    </div>
+  </aside>
+
+  <main class="main" id="main">
+    <div class="empty-state">
+      <div class="icon">[ ]</div>
+      <h3>Select or create a project</h3>
+      <p>Choose a folder from the left sidebar or create a new project to get started</p>
+    </div>
+  </main>
+</div>
+
+<!-- ── Folder Modal ────────────────────────────────────────── -->
+<div class="modal" id="folderModal" style="display:none">
+  <div class="modal-content">
+    <div class="modal-title" id="folderModalTitle">New Folder</div>
+    <input type="text" class="modal-input" id="folderNameInput" placeholder="Folder name">
+    <select class="modal-input" id="folderParentSelect" style="cursor:pointer;">
+      <option value="">No parent (root)</option>
+    </select>
+    <div class="modal-actions">
+      <button class="btn" @click="window.closeFolderModal()">Cancel</button>
+      <button class="btn" data-variant="primary" @click="window.confirmFolder()">Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Project Modal ───────────────────────────────────────── -->
+<div class="modal" id="projectModal" style="display:none">
+  <div class="modal-content">
+    <div class="modal-title" id="projectModalTitle">New Project</div>
+    <select class="modal-input" id="projectFolderSelect" style="cursor:pointer;">
+      <option value="">No folder</option>
+    </select>
+    <input type="text" class="modal-input" id="projectNameInput" placeholder="Project name">
+    <textarea class="modal-textarea" id="projectDescInput" placeholder="Description (optional)"></textarea>
+    <div class="modal-actions">
+      <button class="btn" @click="window.closeProjectModal()">Cancel</button>
+      <button class="btn" data-variant="primary" @click="window.confirmProject()">Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Node Modal ──────────────────────────────────────────── -->
+<div class="modal" id="nodeModal" style="display:none">
+  <div class="modal-content">
+    <div class="modal-title" id="nodeModalTitle">Add Node</div>
+    <input type="text" class="modal-input" id="nodeTitleInput" placeholder="Node name">
+    <textarea class="modal-textarea" id="nodeDescInput" placeholder="Description (optional)"></textarea>
+    <div class="modal-actions">
+      <button class="btn" @click="window.closeNodeModal()">Cancel</button>
+      <button class="btn" data-variant="primary" id="nodeConfirmBtn" @click="window.confirmNode()">Add</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── File Modal ──────────────────────────────────────────── -->
+<div class="modal" id="fileModal" style="display:none">
+  <div class="modal-content" style="width:580px;">
+    <div class="modal-title">Files</div>
+    <div class="upload-zone" id="uploadZone" @click="document.getElementById('fileInput').click()">
+      <input type="file" id="fileInput" multiple @change="window.handleFileSelect($event)">
+      <div class="icon">[+]</div>
+      <div class="text">Drag files here, or <strong>click to upload</strong></div>
+    </div>
+    <div id="pendingFiles" class="file-list"></div>
+    <div id="existingFiles" class="file-list"></div>
+    <div class="modal-actions">
+      <button class="btn" @click="window.closeFileModal()">Cancel</button>
+      <button class="btn" data-variant="primary" @click="window.confirmFiles()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Preview Modal ───────────────────────────────────────── -->
+<div class="modal" id="previewModal" style="display:none">
+  <div class="modal-content" style="width:700px;max-height:80vh;overflow-y:auto;">
+    <div class="modal-title" id="previewTitle">Preview</div>
+    <div id="previewContent" style="text-align:center;"></div>
+    <div class="modal-actions">
+      <button class="btn" @click="window.closePreviewModal()">Close</button>
+      <button class="btn" data-variant="primary" id="previewDownloadBtn" @click="window.downloadPreviewedFile()">Download</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Stats Modal ─────────────────────────────────────────── -->
+<div class="modal" id="statsModal" style="display:none">
+  <div class="modal-content" style="width:520px;">
+    <div class="modal-title">Statistics</div>
+    <div id="statsContent"></div>
+    <div class="modal-actions">
+      <button class="btn" @click="window.openAppDataDir()">Open Data Folder</button>
+      <button class="btn" @click="window.closeStatsModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── AI Chat Panel ───────────────────────────────────────── -->
+<div class="chat-panel" id="chatPanel">
+  <div class="chat-panel-header">
+    <div style="display:flex;align-items:center;">
+      <span class="chat-panel-title">AI Chat</span>
+      <span class="chat-context-badge" id="chatContextBadge" style="display:none;" @click="window._toggleContextPicker()"></span>
+    </div>
+    <div class="chat-panel-actions">
+      <button @click="window.clearChat()" title="Clear chat">&#8635;</button>
+      <button @click="window.closeChat()" title="Close">&times;</button>
+    </div>
+    <div class="context-picker" id="contextPicker" style="display:none;">
+      <div class="context-picker-tree" id="contextPickerTree"></div>
+    </div>
+  </div>
+  <div class="chat-empty" id="chatEmpty">
+    <div class="icon">[AI]</div>
+    <h4>Project Assistant</h4>
+    <p>Ask questions about your projects,<br>get summaries, or discuss your work.</p>
+  </div>
+  <div class="chat-messages" id="chatMessages" style="display:none;"></div>
+  <div class="chat-input-area">
+    <button class="chat-menu-btn" id="chatMenuBtn" @click="window.toggleChatMenu()" title="Menu">
+      <span class="chat-menu-icon">≡</span>
+    </button>
+    <div class="chat-menu" id="chatMenu" style="display:none;">
+      <div class="chat-menu-section">
+        <div class="chat-menu-label">Attachments</div>
+        <div class="chat-attachments" id="chatAttachments"></div>
+        <button class="chat-menu-item" id="chatAddFileBtn">+ Add files</button>
+        <input type="file" id="chatFileInput" multiple style="display:none">
+      </div>
+      <div class="chat-menu-section">
+        <div class="chat-menu-label">Model</div>
+        <div class="chat-model-list" id="chatModelList"></div>
+      </div>
+    </div>
+    <textarea id="chatInput" placeholder="Ask about your project..." rows="1" @keydown="window.handleChatKey($event)"></textarea>
+    <button class="chat-send-btn" id="chatSendBtn" @click="window.sendChatMessage()" title="Send">&#8593;</button>
+  </div>
+</div>
+
+<!-- ── Confirm Modal ──────────────────────────────────────── -->
+<div class="modal" id="confirmModal" style="display:none" x-ignore>
+  <div class="modal-content" style="width:360px;text-align:center;">
+    <div id="confirmMessage" style="padding:20px 0;font-size:14px;line-height:1.6;"></div>
+    <div class="modal-actions" style="justify-content:center;">
+      <button class="btn" id="confirmCancelBtn">Cancel</button>
+      <button class="btn" data-variant="danger" id="confirmOkBtn">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Error Toast ─────────────────────────────────────────── -->
+<div id="errorToast" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--danger);color:white;padding:12px 24px;border-radius:12px;z-index:9999;font-size:13px;font-weight:500;box-shadow:0 8px 32px rgba(255,59,48,0.4);max-width:80%;text-align:center;cursor:pointer;" @click="$el.style.display='none'"></div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,117 @@
+================================================================================
+  WLU Item Management — Project Structure
+  Tauri v2 Desktop App | Rust Backend + Web Frontend + SQLite | v1.0.0
+================================================================================
+
+.
+├── .env                          # DeepSeek API key (git-ignored)
+├── project-manager.html          # Original monolithic prototype (legacy)
+├── structure.txt                 # This file
+│
+└── tauri-app/
+    │
+    ├── src/                      # ── Frontend ──────────────────────────────
+    │   ├── index.html            # DOM shell (~180 lines), all modals & panels
+    │   ├── css/
+    │   │   └── main.css          # Optimized: data-attr buttons, CSS custom props, 13 sections
+    │   └── js/
+    │       ├── main.js           # Entry point: init, global events, expose to window
+    │       ├── store.js          # Reactive state management (Proxy + pub/sub)
+    │       ├── api.js            # Tauri IPC wrappers (all invoke() calls)
+    │       ├── utils.js          # Helpers: escapeHtml, formatTime, formatSize, showError
+    │       ├── theme.js          # Light/dark/system theme toggle
+    │       ├── sidebar.js        # Left sidebar: folder tree, drag-and-drop, inline create
+    │       ├── board.js          # Main area: node cards, files grid, timeline, search
+    │       ├── modals.js         # All dialogs: Folder, Project, Node, File, Stats, AI Settings
+    │       ├── chat.js           # AI chat panel: message history, context injection
+    │       └── preview.js        # File preview: images, PDF, text, .docx, download
+    │
+    ├── tests/                    # ── Frontend Tests ────────────────────────
+    │   ├── test.html             # Browser test runner (open in any browser)
+    │   └── utils.test.js         # Unit tests for utils.js (22 assertions)
+    │
+    └── src-tauri/                # ── Backend ───────────────────────────────
+        ├── Cargo.toml            # Dependencies + version: tauri 2, rusqlite, serde, ureq...
+        ├── build.rs              # Tauri build script
+        ├── tauri.conf.json       # Tauri config: window, bundle, version, permissions
+        ├── capabilities/
+        │   └── default.json      # Permissions: shell, dialog, fs
+        ├── icons/
+        │   └── icon.png          # App icon
+        │
+        ├── src/
+        │   ├── main.rs           # Entry: uses library crate, setup, command registration (~50行)
+        │   ├── lib.rs            # Library exports (enables integration tests)
+        │   ├── models.rs         # Data structs: Folder, Project, Node, NodeFile, TimelineEntry
+        │   ├── error.rs          # AppError enum + 8 From implementations
+        │   ├── storage.rs        # Storage trait (20 methods) — abstract over any backend
+        │   ├── services.rs       # Pure logic: AI API client, .docx text extraction
+        │   ├── commands.rs       # All 20 #[tauri::command] functions + AppState
+        │   └── db/
+        │       ├── mod.rs        # Module declarations: sqlite, migration
+        │       ├── sqlite.rs     # SqliteStorage: implements Storage trait + new_in_memory()
+        │       └── migration.rs  # Schema version tracking (v1→v2), incremental migrations
+        │
+        └── tests/
+            └── storage_tests.rs  # 35 integration tests (folders, projects, nodes, files,
+                                  #   timeline, export/import, migrations)
+
+================================================================================
+  Architecture
+================================================================================
+
+── Data Flow ──────────────────────────────────────────────────────────────────
+  UI (board.js/sidebar.js) → api.js → window.__TAURI__.core.invoke()
+       → Rust commands (commands.rs) → Box<dyn Storage> trait methods
+       → SqliteStorage (db/sqlite.rs) → SQLite via rusqlite
+
+── Storage Trait (storage.rs) ─────────────────────────────────────────────────
+  All 20 backend commands work through `Box<dyn Storage>`. To swap backends:
+    1. Implement Storage trait for new backend
+    2. Change one line in main.rs
+  No other code changes needed.
+
+── Database Schema (SQLite, v2) ───────────────────────────────────────────────
+  schema_version  (version INTEGER)
+  folders         (id INTEGER PK, name TEXT, parent_id INTEGER, created_at TEXT)
+  projects        (id INTEGER PK, name TEXT, desc TEXT, folder_id INTEGER FK,
+                   created_at TEXT)
+  nodes           (id INTEGER PK, project_id INTEGER FK, title TEXT, desc TEXT,
+                   files TEXT/JSON, timeline TEXT/JSON, created_at TEXT)
+
+── Frontend Module Dependency Graph ───────────────────────────────────────────
+  main.js ─→ store.js, api.js, utils.js, theme.js, sidebar.js, board.js,
+             modals.js, chat.js, preview.js
+  sidebar.js ─→ store.js, api.js, utils.js
+  board.js ─→ store.js, api.js, utils.js, preview.js, chat.js
+  modals.js ─→ store.js, api.js, utils.js
+  chat.js ─→ store.js, api.js, utils.js
+  preview.js ─→ store.js, api.js, utils.js
+  Zero circular imports at module init time.
+
+── CSS Architecture (main.css, optimized) ─────────────────────────────────────
+  Custom properties: --glass-heavy, --glass-medium, --focus-ring, --hover-lift
+  Button system: base .btn + [data-variant="primary|ghost|danger|ghost-danger"]
+  Naming: .modal.active / .chat-panel.active (unified)
+  13 sections: Variables → Reset → Header → Buttons → Layout → Sidebar →
+  Board → Modals → Upload → Stats → Chat → Search → Scrollbar
+
+── Testing ────────────────────────────────────────────────────────────────────
+  Backend:  35 integration tests (cargo test) — in-memory SQLite, covers all CRUD
+  Frontend: 22 utils assertions (open tauri-app/tests/test.html in browser)
+
+================================================================================
+  Key Dependencies
+================================================================================
+
+  Rust:   tauri 2, rusqlite 0.32 (bundled SQLite), serde/serde_json, chrono,
+          ureq 2 (native-tls + json), base64 0.22, zip 0.6
+  JS:     zero npm dependencies — ES modules, native WebView APIs
+
+================================================================================
+  Build & Test
+================================================================================
+
+  Build:   cargo build --manifest-path tauri-app/src-tauri/Cargo.toml
+  Test:    cargo test --manifest-path tauri-app/src-tauri/Cargo.toml
+  Frontend test: open tauri-app/tests/test.html in any browser

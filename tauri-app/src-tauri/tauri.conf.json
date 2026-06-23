@@ -1,0 +1,22 @@
+{
+  "app": {
+    "windows": [
+      {
+        "height": 800,
+        "title": "Project Manager",
+        "width": 1200
+      }
+    ],
+    "withGlobalTauri": true
+  },
+  "build": {
+    "devUrl": "http://localhost:5173",
+    "frontendDist": "../dist"
+  },
+  "bundle": {
+    "active": true
+  },
+  "identifier": "com.projectmanager.app",
+  "productName": "Project Manager",
+  "version": "0.6.5"
+}

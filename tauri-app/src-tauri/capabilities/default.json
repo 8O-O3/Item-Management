@@ -1,0 +1,16 @@
+{
+  "$schema": "https://tauri.app/v2/schema.json",
+  "identifier": "default",
+  "description": "Default capabilities for the app",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "core:window:allow-close",
+    "core:window:allow-minimize",
+    "core:window:allow-maximize",
+    "core:window:allow-set-title",
+    "shell:allow-open",
+    "dialog:allow-save",
+    "dialog:allow-open"
+  ]
+}
