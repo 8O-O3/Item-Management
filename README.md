@@ -1,6 +1,6 @@
 # Project Manager
 
-一款本地优先的桌面项目管理工具，内置 AI 辅助功能。基于 **Tauri v2 (Rust) + React + TypeScript + SQLite** 构建。
+一款本地优先的桌面项目管理工具，集成 **DeepSeek** 作为 AI 助手。基于 **Tauri v2 (Rust) + React + TypeScript + SQLite** 构建。
 
 <p align="center">
   <img src="tauri-app/src-tauri/icons/icon.png" alt="logo" width="120" />
@@ -27,7 +27,7 @@
 | **前端** | React 19, TypeScript, Vite |
 | **样式** | Tailwind CSS v4 |
 | **状态管理** | [Zustand](https://zustand.docs.pmnd.rs/) |
-| **AI 集成** | OpenAI 兼容接口（DeepSeek 等），支持 SSE 流式输出 |
+| **AI 模型** | [DeepSeek](https://www.deepseek.com/)（默认），兼容所有 OpenAI 接口的模型，支持 SSE 流式输出 |
 
 ## 📂 项目结构
 
@@ -115,17 +115,40 @@ cd tauri-app
 pnpm test
 ```
 
-## ⚙️ AI 配置
+## ⚙️ AI 配置（DeepSeek）
+
+本项目默认使用 **DeepSeek** 作为 AI 助手。DeepSeek 是国内性价比极高的大模型，兼容 OpenAI 接口格式。
+
+### 获取 API Key
+
+1. 访问 [platform.deepseek.com](https://platform.deepseek.com/) 注册账号
+2. 进入 **API Keys** 页面，点击「创建 API Key」
+3. 复制生成的 key（形如 `sk-xxxxxxxx`）
+4. 新用户通常有免费额度，之后按用量计费，价格远低于 GPT-4
+
+### 在应用中配置
 
 1. 打开应用，点击侧边栏的 **设置**（齿轮图标）
-2. 添加 API 配置：
-   - **名称**：任意标签（如 "DeepSeek"）
-   - **API Key**：你的密钥（仅存储在本地 SQLite 中，不会发送到其他地方）
-   - **Base URL**：API 地址（如 `https://api.deepseek.com/v1`）
-   - **Model**：模型名称（如 `deepseek-chat`）
-3. 点击顶栏的 **Chat** 打开 AI 对话面板，即可使用
+2. 填写以下信息：
 
-AI 助手可以读取当前选中节点的内容，帮你头脑风暴、总结归纳、生成内容。
+   | 字段 | 值 | 说明 |
+   |------|-----|------|
+   | **名称** | `DeepSeek` | 任意标签，方便识别 |
+   | **API Key** | `sk-xxxxxxxx` | 你在 DeepSeek 平台获取的 key |
+   | **Base URL** | `https://api.deepseek.com/v1` | 程序会自动拼接 `/chat/completions` |
+   | **Model** | `deepseek-chat` | 推荐 V3 模型，也可用 `deepseek-reasoner` (R1) |
+
+3. 保存后，点击顶栏的 **Chat** 打开 AI 对话面板，即可使用
+
+### 使用其他模型
+
+本应用兼容所有 OpenAI 接口格式的 API，你也可以配置：
+
+- **DeepSeek R1**（推理模型）：Model 填 `deepseek-reasoner`
+- **OpenAI**：Base URL 填 `https://api.openai.com/v1`，Model 填 `gpt-4o`
+- **其他兼容服务**：如 Groq、Together AI、Ollama 本地模型等，只需填入对应地址即可
+
+AI 助手会读取当前选中节点的标题和描述作为上下文，帮你头脑风暴、总结归纳、生成内容。
 
 ## 📦 数据存储
 
