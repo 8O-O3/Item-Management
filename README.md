@@ -1,4 +1,4 @@
-# Project Manager
+# Project Manager — Local-first project management with built-in AI
 
 A local-first desktop project management tool with AI-powered assistance. Built with **Tauri v2** (Rust) + **React + TypeScript** + **SQLite**.
 
