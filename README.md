@@ -6,6 +6,10 @@ A local-first desktop project management tool with AI-powered assistance. Built 
   <img src="tauri-app/src-tauri/icons/icon.png" alt="logo" width="120" />
 </p>
 
+<img width="1195" height="760" alt="截屏2026-06-24 01 39 11" src="https://github.com/user-attachments/assets/b5723cd8-dbea-40a9-bded-b9f5a099e734" />
+<img width="1192" height="761" alt="截屏2026-06-24 01 42 02" src="https://github.com/user-attachments/assets/1583f15c-574e-4a7c-a65f-703007a5a1a8" />
+<img width="1193" height="792" alt="截屏2026-06-24 01 41 18" src="https://github.com/user-attachments/assets/7a0ddef9-4991-48b7-8195-e3e89389bc5d" />
+
 ## ✨ Features
 
 - **📁 Hierarchical Organization** — Folders → Projects → Nodes, with drag-and-drop in the sidebar
@@ -149,6 +153,9 @@ Your API keys are stored in the same SQLite database and **never** leave your ma
 ## 📄 License
 
 MIT
+
+## Status
+Currently in maintenance mode. The core architecture and v1 features are complete and tested. The project demonstrates a working pattern for local-first desktop apps with integrated AI assistance. Open to revisiting if new use cases emerge.
 
 ---
 
